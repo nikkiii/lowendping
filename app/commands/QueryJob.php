@@ -6,7 +6,6 @@ class QueryJob {
 		$servers = Config::get('lowendping.servers');
 		
 		foreach ($servers as $id => $server) {
-			$data['serverid'] = $id;
 			$this->queryServer($id, $server, $data);
 		}
 		
@@ -14,6 +13,10 @@ class QueryJob {
 	}
 	
 	private function queryServer($id, $server, $data) {
+		// Add required fields
+		$data['serverid'] = $id;
+		$data['auth'] = $server['auth'];
+		// Connect and send the data
 		$fs = @fsockopen($server['host'], $server['port'], $errno, $errstr, 5);
 		if (!$fs) {
 			// mark as unable to connect so we aren't waiting forever

@@ -76,9 +76,8 @@ class HomeController extends BaseController {
 		$out = array();
 		
 		foreach ($query->responses()->unsent()->get() as $response) {
-			// TODO timeout on it until it's cleared?
-			$response->sent = true;
-			$response->save();
+			// TODO timeout on it until it's cleared? For now just delete it.
+			$response->delete();
 			
 			$out[] = array('id' => $response->server_id, 'data' => $response->response);
 		}
@@ -87,6 +86,10 @@ class HomeController extends BaseController {
 	}
 	
 	public function serverResponse() {
+		if (!Input::has('id') || !Input::has('serverid') || !Input::has('response')) {
+			return Response::json(array('success' => false, 'error' => 'Missing fields!'));
+		}
+		
 		$query = Query::find(Input::get('id'));
 		
 		if (!$query) {
@@ -94,12 +97,24 @@ class HomeController extends BaseController {
 		}
 		
 		$serverid = Input::get('serverid');
-		$response = Input::get('response');
 		
 		$servers = Config::get('lowendping.servers');
 		
 		if (!isset($servers[$serverid])) {
 			return Response::json(array('success' => false, 'error' => 'Invalid server!'));
+		}
+		
+		if (QueryResponse::where('server_id', $serverid)->where('query_id', $query->id)->count() > 0) {
+			return Response::json(array('success' => false, 'error' => 'Response already logged!'));
+		}
+		
+		if (!Input::has('auth') || Input::get('auth') != $servers[$serverid]['auth']) {
+			// Should we be doing this? It makes sense since it could be a valid error.
+			$response = new QueryResponse;
+			$response->server_id = $serverid;
+			$response->response = 'Invalid response authentication.';
+			$query->responses()->save($response);
+			return Response::json(array('success' => false, 'error' => 'Invalid authentication!'));
 		}
 		
 		$response = new QueryResponse;

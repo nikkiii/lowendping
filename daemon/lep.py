@@ -46,7 +46,8 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 	def handle(self):
 		data = self.request.recv(1024)
 		obj = json.loads(data)
-		queue.put(Query(obj['id'], obj['serverid'], obj['query'], obj['type']))
+		if obj['auth'] == lepconf.auth:
+			queue.put(Query(obj['id'], obj['serverid'], obj['query'], obj['type']))
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 	pass
@@ -56,6 +57,7 @@ def send_response(query, response):
 	sock.connect(lepconf.remote)
 	try:
 		res = {
+			"auth" : lepconf.auth,
 			"id" : query.id,
 			"serverid" : query.serverid,
 			"response" : str(response)
