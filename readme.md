@@ -8,8 +8,16 @@ Installation:
 - Download the contents and extract into a directory
 - Run "composer install" in that directory
 - Run "php artisan migrate" to initialize the database
-- Install "daemon/lep.py" on a server, modify the hostname/port in lepconf.py, and add the server to the configuration file in apps/config/lowendping.php
+- Install the python script on the servers you want (see below)
 - Try it out!
+
+Python script installation:
+
+- Install python-pip
+- Run 'pip install sh' (the required shell wrapper)
+- Update the information in lepconf.py to point to your server
+- Firewall the script using iptables or your method of choice (it has no authentication, just block port 12337 to all but your main node)
+- Run 'python lep.py' (It is recommended
 
 ### License
 
