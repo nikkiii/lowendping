@@ -6,9 +6,13 @@
 		</div>
 		<div class="content text-center">
 			<form id="queryform">
-				<h4>Query (Host/IP)</h4>
 				<input id="querytype" type="hidden" name="type" value="" />
-				<input type="text" name="query" value="" />
+				<div class="row">
+					<div class="col-sm-offset-4 col-sm-4">
+						<h4>Query (Host/IP)</h4>
+						<input type="text" name="query" value="" class="form-control" />
+					</div>
+				</div>
 				<br />
 				<a href="#servers" id="serverlink">Servers ({{ count($servers) }})</a>
 				<div class="row">
