@@ -9,6 +9,7 @@ Installation:
 - Run "composer install" in that directory
 - Run "php artisan migrate" to initialize the database
 - Install the python script on the servers you want (see below)
+- Edit app/config/lowendping.php and add the servers (Numeric keys are required, and it is recommended to keep them in order)
 - Try it out!
 
 Python script installation:
