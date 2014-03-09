@@ -33,7 +33,7 @@ class QueryThread(threading.Thread):
 			elif query.type == "trace":
 				out = traceroute(query.query)
 			send_response(query, out)
-			print "Processed query",str(query.id),out
+			print "Processed query",str(query.id)
 
 class Query:
 	def __init__(self, id, serverid, query, type):
