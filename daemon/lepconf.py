@@ -1,4 +1,4 @@
-remote = ("lowendping.nikkii.us", 80)
+remote = ("example.com", 80)
 page = "/response"
 
 reqthreads = 4
