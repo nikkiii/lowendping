@@ -17,7 +17,7 @@ Python script installation:
 - Run 'pip install sh' (the required shell wrapper)
 - Update the information in lepconf.py to point to your server
 - Firewall the script using iptables or your method of choice (it has no authentication, just block port 12337 to all but your main node)
-- Run 'python lep.py' (It is recommended
+- Run 'python lep.py' (It is recommended to run it as a user other than root of course)
 
 ### License
 
