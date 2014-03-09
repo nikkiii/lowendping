@@ -20,6 +20,18 @@ class HomeController extends BaseController {
 	}
 	
 	public function submitQuery() {
+		$validator = Validator::make(Input::all(),
+			array(
+				'query' => array('required'),
+				'servers' => array('required', 'array'),
+				'type' => array('required', 'in:ping,trace')
+			)
+		);
+		
+		if ($validator->fails()) {
+			return Response::json(array('success' => false, 'error' => $validator->messages()->first()));
+		}
+		
 		$query = Input::get('query');
 		$queryServers = Input::get('servers');
 		$type = Input::get('type');
