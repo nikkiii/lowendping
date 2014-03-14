@@ -10,6 +10,7 @@ Installation:
 - Run "php artisan migrate" to initialize the database
 - Install the python script on the servers you want (see below)
 - Edit app/config/lowendping.php and add the servers (Numeric keys are required, and it is recommended to keep them in order)
+- Edit your webserver configuration and set the document root to (install dir)/public, then add a rewrite rule for laravel (Use google, there's plenty out there)
 - Try it out!
 
 Python script installation:
