@@ -23,7 +23,11 @@
 			<hr>
 			<footer class="footer">
 				<p class="pull-right"><a href="#">Back to top</a></p>
-				<p>&copy; {{ date('Y') }} {{ Config::get('app.name') }}</p>
+				<p>&copy; {{ date('Y') }} {{ Config::get('app.name') }}
+				@if (Config::get('app.name') != 'LowEndPing' && Config::get('app.credits'))
+				- Powered by <a href="https://github.com/nikkiii/lowendping">LowEndPing</a>
+				@endif
+				</p>
 			</footer>
 		</div> <!-- /container -->
 		

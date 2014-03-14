@@ -1,8 +1,28 @@
 <?php
 
 return array(
-		
+
+	/*
+	|--------------------------------------------------------------------------
+	| Application Name
+	|--------------------------------------------------------------------------
+	|
+	| This is the name shown in the footer, header, and navbar. You may change this if you wish.
+	|
+	*/
+	
 	'name' => 'LowEndPing',
+
+	/*
+	|--------------------------------------------------------------------------
+	| Application Credits
+	|--------------------------------------------------------------------------
+	|
+	| If the above name is changed, then this will add a " - Powered by LowEndPing" to the footer.
+	| You may disable it, but it doesn't hurt anything and helps the developer.
+	|
+	*/
+	'credits' => true,
 
 	/*
 	|--------------------------------------------------------------------------
