@@ -18,11 +18,11 @@
 				<div class="row">
 					<div id="servers" class="col-sm-offset-4 col-sm-4" style="display: none;">
 						<label class="checkbox">
-							<input id="mastercheck" type="checkbox" checked="true" /> <strong>All Servers</strong>
+							<input id="mastercheck" type="checkbox" checked="checked" /> <strong>All Servers</strong>
 						</label>
 @foreach ($servers as $id => $server)
 						<label class="checkbox">
-							<input type="checkbox" name="servers[{{ $id }}]" value="1" checked="true" /> {{ $server['name'] }}
+							<input type="checkbox" name="servers[{{ $id }}]" value="1" checked="checked" /> {{ $server['name'] }}
 						</label>
 @endforeach
 					</div>
@@ -35,7 +35,7 @@
 @foreach ($servers as $id => $server)
 				<div id="server_{{ $id }}" class="row hidden">
 					<h4>{{{ $server['name'] }}}</h4>
-					<div id="server_{{ $id }}_response" class="col-sm-offset-3 col-sm-6">
+					<div id="server_{{ $id }}_response" class="col-sm-offset-2 col-sm-8">
 						
 					</div>
 				</div>

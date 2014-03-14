@@ -5,8 +5,8 @@ class QueryJob {
 	public function fire($job, $data) {
 		$servers = Config::get('lowendping.servers');
 		
-		foreach ($servers as $id => $server) {
-			$this->queryServer($id, $server, $data);
+		foreach ($data['servers'] as $id) {
+			$this->queryServer($id, $servers[$id], $data);
 		}
 		
 		$job->delete();

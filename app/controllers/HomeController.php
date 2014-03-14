@@ -67,7 +67,7 @@ class HomeController extends BaseController {
 		$q->servers = serialize($serverIds);
 		$q->save();
 		
-		Queue::push('QueryJob', array('id' => $q->id, 'query' => $query, 'type' => $type));
+		Queue::push('QueryJob', array('id' => $q->id, 'query' => $query, 'type' => $type, 'servers' => $serverIds));
 		
 		return Response::json(array('success' => true, 'queryid' => $q->id, 'serverCount' => count($queryServers)));
 	}
