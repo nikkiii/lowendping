@@ -62,11 +62,6 @@ $(document).ready(function() {
 		}, 'json');
 	});
 
-	$('.btn').click(function(e) {
-		// TODO better way
-		$('#querytype').val($(this).attr('name'));
-	});
-
 	$.fn.extend({
 		// Resets the response containers before a new query, adding the loading
 		// bar.

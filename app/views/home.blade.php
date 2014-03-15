@@ -6,11 +6,16 @@
 		</div>
 		<div class="content text-center">
 			<form id="queryform">
-				<input id="querytype" type="hidden" name="type" value="" />
 				<div class="row">
 					<div class="col-sm-offset-4 col-sm-4">
 						<h4>Query (Host/IP)</h4>
 						<input type="text" name="query" value="" class="form-control" />
+					</div>
+				</div>
+				<br />
+				<div class="row">
+					<div class="col-sm-offset-5 col-sm-2">
+					{{ Form::select('type', Config::get('lowendping.querytypes'), 'ping', array('class' => 'form-control')) }}
 					</div>
 				</div>
 				<br />
@@ -28,8 +33,7 @@
 					</div>
 				</div>
 				<br />
-				<input id="ping" class="btn btn-info" type="submit" name="ping" value="Ping" data-loading-text="Working" data-complete-text="Ping" />
-				<input id="trace" class="btn btn-default" type="submit" name="trace" value="Trace" data-loading-text="Working" data-complete-text="Trace" />
+				<input class="btn btn-default" type="submit" name="submit" value="Submit" data-loading-text="Working" data-complete-text="Submit" />
 			</form>
 			<div id="resultcontainer">
 @foreach ($servers as $id => $server)

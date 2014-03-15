@@ -20,11 +20,15 @@ class HomeController extends BaseController {
 	}
 	
 	public function submitQuery() {
+		Validator::extend('validtype', function($attribute, $value, $parameters) {
+			return array_key_exists($value, Config::get('lowendping.querytypes'));
+		});
+		
 		$validator = Validator::make(Input::all(),
 			array(
 				'query' => array('required'),
 				'servers' => array('required', 'array'),
-				'type' => array('required', 'in:ping,trace')
+				'type' => array('required', 'validtype')
 			)
 		);
 		
@@ -48,18 +52,17 @@ class HomeController extends BaseController {
 			$serverIds[] = $id;
 		}
 		
-		// Resolve it (it'll fail filter validation if it doesn't resolve)
-		$check = gethostbyname($query);
-		
-		$ipv6 = filter_var($check, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 | FILTER_FLAG_NO_PRIV_RANGE) !== false;
-		
-		if (!filter_var($check, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE) && !$ipv6) {
-			return Response::json(array('success' => false, 'error' => 'Invalid query ' . $check));
+		if (!$this->checkQueryType($query, 4) && !$this->checkQueryType($query, 6)) {
+			// Resolve it (it'll fail filter validation if it doesn't resolve)
+			$check = gethostbyname($query);
+			
+			if (!$this->checkQueryType($check, 4) && !$this->checkQueryType($check, 6)) {
+				return Response::json(array('success' => false, 'error' => 'Invalid query ' . $check));
+			}
 		}
 		
-		// Cheap trick for ping6 since I don't know enough Python to check ip type.
-		if ($ipv6 && $type == 'ping') {
-			$type = 'ping6';
+		if ($this->checkQueryType($query, 4) && ($type == 'ping6' || $type == 'trace6' || $type == 'mtr6')) {
+			return Response::json(array('success' => false, 'error' => 'Invalid address for type ' . $type));
 		}
 		
 		$q = new Query;
@@ -70,6 +73,15 @@ class HomeController extends BaseController {
 		Queue::push('QueryJob', array('id' => $q->id, 'query' => $query, 'type' => $type, 'servers' => $serverIds));
 		
 		return Response::json(array('success' => true, 'queryid' => $q->id, 'serverCount' => count($queryServers)));
+	}
+	
+	private function checkQueryType($query, $type = 4) {
+		if ($type == 4 && filter_var($query, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE)) {
+			return true;
+		} else if ($type == 6 && filter_var($query, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+			return true;
+		}
+		return false;
 	}
 	
 	public function checkResponses(Query $query) {
