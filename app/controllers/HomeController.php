@@ -41,7 +41,7 @@ class HomeController extends BaseController {
 		$serverIds = array();
 		
 		// Validate servers
-		foreach ($queryServers as $id) {
+		foreach ($queryServers as $id => $val) {
 			if (!isset($servers[$id])) {
 				return Response::json(array('success' => false, 'error' => 'Invalid server ' . $id));
 			}
