@@ -20,15 +20,11 @@ class HomeController extends BaseController {
 	}
 	
 	public function submitQuery() {
-		Validator::extend('validtype', function($attribute, $value, $parameters) {
-			return array_key_exists($value, Config::get('lowendping.querytypes'));
-		});
-		
 		$validator = Validator::make(Input::all(),
 			array(
-				'query' => array('required'),
+				'query' => array('required', 'query'),
 				'servers' => array('required', 'array'),
-				'type' => array('required', 'validtype')
+				'type' => array('required', 'type')
 			)
 		);
 		
@@ -36,43 +32,67 @@ class HomeController extends BaseController {
 			return Response::json(array('success' => false, 'error' => $validator->messages()->first()));
 		}
 		
-		$query = Input::get('query');
-		$queryServers = Input::get('servers');
-		$type = Input::get('type');
+		// Validate rate limit
+		$ip = Request::getClientIp();
+		
+		$querylimit = Config::get('lowendping.ratelimit.queries');
+		
+		if (!empty($querylimit)) {
+			$limit = RateLimit::find($ip);
+			
+			if ($limit) {
+				$time = time();
+				
+				$expiration = (int) ($limit->time + Config::get('lowendping.ratelimit.timespan'));
+				
+				if ($expiration > $time) {
+					if ($limit->hits >= $querylimit) {
+						$reset = ($expiration - $time) / 60;
+						if ($reset <= 1) {
+							return Response::json(array('success' => false, 'error' => 'Rate limit exceeded, please try again in 1 minute.'));
+						}
+						return Response::json(array('success' => false, 'error' => 'Rate limit exceeded, please try again in ' . $reset . ' minutes.'));
+					}
+					
+					$limit->hits++;
+					$limit->save();
+				} else {
+					$limit->time = time();
+					$limit->hits = 1;
+					$limit->save();
+				}
+			} else {
+				$limit = new RateLimit;
+				$limit->ip = $ip;
+				$limit->hits = 1;
+				$limit->time = time();
+				$limit->save();
+			}
+		}
 		
 		$servers = Config::get('lowendping.servers');
 		
 		$serverIds = array();
 		
 		// Validate servers
-		foreach ($queryServers as $id => $val) {
+		foreach (Input::get('servers') as $id => $val) {
 			if (!isset($servers[$id])) {
 				return Response::json(array('success' => false, 'error' => 'Invalid server ' . $id));
 			}
 			$serverIds[] = $id;
 		}
-		
-		if (!$this->checkQueryType($query, 4) && !$this->checkQueryType($query, 6)) {
-			// Resolve it (it'll fail filter validation if it doesn't resolve)
-			$check = gethostbyname($query);
-			
-			if (!$this->checkQueryType($check, 4) && !$this->checkQueryType($check, 6)) {
-				return Response::json(array('success' => false, 'error' => 'Invalid query ' . $check));
-			}
-		}
-		
-		if ($this->checkQueryType($query, 4) && ($type == 'ping6' || $type == 'trace6' || $type == 'mtr6')) {
-			return Response::json(array('success' => false, 'error' => 'Invalid address for type ' . $type));
-		}
+
+		// Process the query
+		$query = Input::get('query');
 		
 		$q = new Query;
 		$q->query = $query;
 		$q->servers = serialize($serverIds);
 		$q->save();
 		
-		Queue::push('QueryJob', array('id' => $q->id, 'query' => $query, 'type' => $type, 'servers' => $serverIds));
+		Queue::push('QueryJob', array('id' => $q->id, 'query' => $query, 'type' => Input::get('type'), 'servers' => $serverIds));
 		
-		return Response::json(array('success' => true, 'queryid' => $q->id, 'serverCount' => count($queryServers)));
+		return Response::json(array('success' => true, 'queryid' => $q->id, 'serverCount' => count($serverIds)));
 	}
 	
 	private function checkQueryType($query, $type = 4) {
@@ -98,23 +118,24 @@ class HomeController extends BaseController {
 	}
 	
 	public function serverResponse() {
-		if (!Input::has('id') || !Input::has('serverid') || !Input::has('response')) {
-			return Response::json(array('success' => false, 'error' => 'Missing fields!'));
+		$validator = Validator::make(Input::all(),
+			array(
+				'id' => array('required', 'exists:queries,id'),
+				'serverid' => array('required', 'server'),
+				'response' => array('required'),
+				'auth' => array('required')
+			)
+		);
+		
+		if ($validator->fails()) {
+			return Response::json(array('success' => false, 'error' => $validator->messages()->first()));
 		}
 		
 		$query = Query::find(Input::get('id'));
 		
-		if (!$query) {
-			return Response::json(array('success' => false, 'error' => 'Invalid query!'));
-		}
-		
 		$serverid = Input::get('serverid');
 		
 		$servers = Config::get('lowendping.servers');
-		
-		if (!isset($servers[$serverid])) {
-			return Response::json(array('success' => false, 'error' => 'Invalid server!'));
-		}
 		
 		if (QueryResponse::where('server_id', $serverid)->where('query_id', $query->id)->count() > 0) {
 			return Response::json(array('success' => false, 'error' => 'Response already logged!'));

@@ -69,6 +69,11 @@ return array(
 	"unique"           => "The :attribute has already been taken.",
 	"url"              => "The :attribute format is invalid.",
 
+
+	"query"            => "The :attribute is invalid.",
+	"server"           => "The :attribute is invalid.",
+	"type"           => "The :attribute is invalid.",
+
 	/*
 	|--------------------------------------------------------------------------
 	| Custom Validation Language Lines
