@@ -16,7 +16,7 @@ Installation:
 Python script installation:
 
 - Install python-pip
-- Run 'pip install sh' (the required shell wrapper)
+- Run 'pip install sh' (the required shell wrapper) and 'pip install ipaddress' (required only if python 2.7 instead of python 3)
 - Update the information in lepconf.py to point to your server and define an auth token
 - Run 'python lep.py' (It is recommended to run it as a user other than root of course)
 
