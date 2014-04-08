@@ -1,9 +1,6 @@
 @extends('layouts.main')
 
 @section('content')
-		<div class="page-header">
-			<h1>{{ Config::get('app.name') }}</h1>
-		</div>
 		<div class="content text-center">
 			<form id="queryform">
 				<div class="row">
