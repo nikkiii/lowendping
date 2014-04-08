@@ -14,7 +14,7 @@ class ApiController extends BaseController {
 		$list = array();
 	
 		foreach (Config::get('lowendping.servers') as $server => $info) {
-			$list[$server] = $server['name'];
+			$list[$server] = $info['name'];
 		}
 	
 		return Response::json($list);
