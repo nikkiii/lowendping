@@ -13,6 +13,32 @@ return array(
 	'servers' => array(
 		1 => array('name' => 'Example', 'host' => 'localhost', 'port' => 12337, 'auth' => 'SOME_SECURE_STRING')
 	),
+	
+	/*
+	|--------------------------------------------------------------------------
+	| API
+	|--------------------------------------------------------------------------
+	|
+	| There is an 'api' which allows a list of servers to be served using json.
+	| It is mainly used for programs which wish to interact with LowEndPing instances,
+	| and does not provide any extra information.
+	|
+	*/
+	'api' => array(
+		'enabled' => false
+	),
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Query settings
+	|--------------------------------------------------------------------------
+	|
+	| This is the timeout used when connecting to the LowEndPing servers, 5 is usually a good value to use.
+	|
+	*/
+	'query' => array(
+		'timeout' => 5
+	),
 
 	/*
 	|--------------------------------------------------------------------------

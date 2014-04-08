@@ -9,7 +9,7 @@
 				<div class="row">
 					<div class="col-sm-offset-4 col-sm-4">
 						<h4>Query (Host/IP)</h4>
-						<input type="text" name="query" value="" class="form-control" />
+						{{ Form::text('query', Request::getClientIp(), array('class' => 'form-control')) }}
 					</div>
 				</div>
 				<br />

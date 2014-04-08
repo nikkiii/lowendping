@@ -16,5 +16,7 @@ Route::model('query', 'Query');
 Route::get('/', 'HomeController@showHome');
 Route::get('update/{query}', 'HomeController@checkResponses');
 
+Route::get('api/serverlist', 'HomeController@serverList');
+
 Route::post('submit', 'HomeController@submitQuery');
 Route::post('response', 'HomeController@serverResponse');

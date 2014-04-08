@@ -17,7 +17,7 @@ class QueryJob {
 		$data['serverid'] = $id;
 		$data['auth'] = $server['auth'];
 		// Connect and send the data
-		$fs = @fsockopen($server['host'], $server['port'], $errno, $errstr, 5);
+		$fs = @fsockopen($server['host'], $server['port'], $errno, $errstr, Config::get('lowendping.query.timeout', 5));
 		if (!$fs) {
 			// mark as unable to connect so we aren't waiting forever
 			$resp = new QueryResponse;
