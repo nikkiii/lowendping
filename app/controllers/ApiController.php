@@ -5,7 +5,7 @@ class ApiController extends BaseController {
 	public function __construct() {
 		$this->beforeFilter(function() {
 			if (!Config::get('lowendping.api.enabled', false)) {
-				return Response::make('API Disabled', array(), 403);
+				return Response::make('API Disabled', 403);
 			}
 		});
 	}
