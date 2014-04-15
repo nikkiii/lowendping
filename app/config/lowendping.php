@@ -30,6 +30,21 @@ return array(
 	
 	/*
 	|--------------------------------------------------------------------------
+	| Result Archive
+	|--------------------------------------------------------------------------
+	|
+	| You can archive LowEndPing results (keep them in the query response table) for a set amount of time.
+	| This allows results to be shared and viewed by others.
+	| Set 'enabled' to false to disable this and delete responses as soon as they are seen by the client.
+	|
+	*/
+	'archive' => array(
+		'enabled' => true,
+		'days' => 7
+	),
+	
+	/*
+	|--------------------------------------------------------------------------
 	| Query settings
 	|--------------------------------------------------------------------------
 	|

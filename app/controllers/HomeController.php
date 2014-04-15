@@ -19,6 +19,20 @@ class HomeController extends BaseController {
 		return View::make('home')->with('servers', Config::get('lowendping.servers'));
 	}
 	
+	public function showResult(Query $query) {
+		$servers = Config::get('lowendping.servers');
+		$responses = array();
+		
+		foreach ($query->responses()->orderBy('server_id', 'asc')->get() as $response) {
+			$response->server = $servers[$response->server_id];
+			$responses[] = $response;
+		}
+		
+		$query->expire_at = $query->created_at->addDays(Config::get('lowendping.archive.days', 7));
+		
+		return View::make('result')->with('query', $query)->with('responses', $responses);
+	}
+	
 	public function submitQuery() {
 		$validator = Validator::make(Input::all(),
 			array(
@@ -92,7 +106,17 @@ class HomeController extends BaseController {
 		
 		Queue::push('QueryJob', array('id' => $q->id, 'query' => $query, 'type' => Input::get('type'), 'servers' => $serverIds));
 		
-		return Response::json(array('success' => true, 'queryid' => $q->id, 'serverCount' => count($serverIds)));
+		$response = array(
+			'success' => true,
+			'queryid' => $q->id,
+			'serverCount' => count($serverIds)
+		);
+		
+		if (Config::get('lowendping.archive.enabled', false)) {
+			$response['resultLink'] = action('HomeController@showResult', array('query' => $q->id));
+		}
+		
+		return Response::json($response);
 	}
 	
 	private function checkQueryType($query, $type = 4) {
@@ -107,9 +131,15 @@ class HomeController extends BaseController {
 	public function checkResponses(Query $query) {
 		$out = array();
 		
+		$archive = Config::get('lowendping.archive.enabled', false);
+		
 		foreach ($query->responses()->unsent()->get() as $response) {
-			// TODO timeout on it until it's cleared? For now just delete it.
-			$response->delete();
+			if ($archive) {
+				$response->sent = 1;
+				$response->save();
+			} else {
+				$response->delete();
+			}
 			
 			$out[] = array('id' => $response->server_id, 'data' => $response->response);
 		}

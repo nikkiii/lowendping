@@ -33,6 +33,9 @@
 				<input class="btn btn-default" type="submit" name="submit" value="Submit" data-loading-text="Working" data-complete-text="Submit" />
 			</form>
 			<div id="resultcontainer">
+				<div class="row hidden">
+					<h5><a id="resultLink" href="#">Link to these results</a></h5>
+				</div>
 @foreach ($servers as $id => $server)
 				<div id="server_{{ $id }}" class="row hidden">
 					<h4>{{{ $server['name'] }}}</h4>
