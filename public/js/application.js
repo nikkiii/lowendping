@@ -52,6 +52,10 @@ $(document).ready(function() {
 				
 				$('#resultcontainer').data('queryid', res.queryid);
 				
+				if (res.resultLink) {
+					$('#resultLink').attr('href', res.resultLink).parent().parent().removeClass('hidden');
+				}
+				
 				totalQueries = res.serverCount;
 				
 				$('#resultcontainer').status();

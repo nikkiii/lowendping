@@ -9,7 +9,8 @@ Installation:
 - Run "composer install" in that directory
 - Run "php artisan migrate" to initialize the database
 - Install the python script on the servers you want (see below)
-- Edit app/config/lowendping.php and add the servers (Numeric keys are required, and it is recommended to keep them in order)
+- Edit app/config/lowendping.php and add the servers (Numeric keys are required, and it is recommended to keep them in order), and optionally disable the archive
+- Add "cd /path/to/lowendping; php artisan lowendping:archive" to a cron job, every hour or daily would be fine. This is required even without the archive to clean up old queries.
 - Edit your webserver configuration and set the document root to (install dir)/public, then add a rewrite rule for laravel (Use google, there's plenty out there)
 - Try it out!
 
