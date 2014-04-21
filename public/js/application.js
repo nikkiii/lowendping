@@ -16,8 +16,8 @@ $(document).ready(function() {
 		$("#servers").slideToggle();
 	});
 
-	$('#mastercheck').click(function(e) {
-		$('input:checkbox').attr('checked', $(this).is(":checked"));
+	$('#mastercheck').change(function(e) {
+		$('input:checkbox').prop('checked', $(this).is(":checked"));
 	});
 
 	$('input:checkbox').change(function(e) {
