@@ -112,6 +112,10 @@ class HomeController extends BaseController {
 			'serverCount' => count($serverIds)
 		);
 		
+		if (Config::get('lowendping.websocket.enabled', false)) {
+			$response['websocket'] = websocket_url(Config::get('lowendping.websocket.path', ''), Config::get('lowendping.websocket.proxied', false) ? false : Config::get('lowendping.websocket.port', 8080));
+		}
+		
 		if (Config::get('lowendping.archive.enabled', false)) {
 			$response['resultLink'] = action('HomeController@showResult', array('query' => $q->id));
 		}
@@ -173,10 +177,7 @@ class HomeController extends BaseController {
 		
 		if (!Input::has('auth') || Input::get('auth') != $servers[$serverid]['auth']) {
 			// Should we be doing this? It makes sense since it could be a valid error.
-			$response = new QueryResponse;
-			$response->server_id = $serverid;
-			$response->response = 'Invalid response authentication.';
-			$query->responses()->save($response);
+			$this->submitResponse($query, $serverid, 'Invalid response authentication.');
 			return Response::json(array('success' => false, 'error' => 'Invalid authentication!'));
 		}
 		
@@ -185,6 +186,26 @@ class HomeController extends BaseController {
 		$response->response = Input::get('response');
 		
 		$query->responses()->save($response);
+		
+		$this->submitResponse($query, $serverid, Input::get('response'));
+	}
+	
+	private function submitResponse($query, $server_id, $res) {
+		$response = new QueryResponse;
+		$response->server_id = $server_id;
+		$response->response = $res;
+		$query->responses()->save($response);
+		
+		if (Config::get('lowendping.websocket.enabled')) {			
+			// Use ZeroMQ to send the data
+			$context = new ZMQContext();
+			$socket = $context->getSocket(ZMQ::SOCKET_PUSH, 'Response Pusher');
+			$socket->connect("tcp://localhost:5555");
+			
+			$entryData = array('query_id' => $query->id, 'server_id' => $server_id, 'data' => $res);
+			
+			$socket->send(json_encode($entryData));
+		}
 	}
 
 }

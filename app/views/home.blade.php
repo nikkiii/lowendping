@@ -1,5 +1,11 @@
 @extends('layouts.main')
 
+@section('scripts')
+@if (Config::get('lowendping.websocket.enabled', false))
+	{{ HTML::script('/js/autobahn.min.js') }}
+@endif
+@endsection
+
 @section('content')
 		<div class="content text-center">
 			<form id="queryform">

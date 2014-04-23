@@ -12,3 +12,4 @@
 */
 
 Artisan::add(new CleanTableCommand);
+Artisan::add(new WebsocketServerCommand);

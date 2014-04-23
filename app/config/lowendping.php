@@ -85,6 +85,28 @@ return array(
 		'trace6' => 'traceroute6',
 		'mtr' => 'mtr',
 		'mtr6' => 'mtr6'
-	)
-
+	),
+	
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Websocket support
+	|--------------------------------------------------------------------------
+	|
+	| Websocket support via Ratchet and ZMQ
+	|
+	*/
+	'websocket' => array(
+		'enabled' => true,
+		'port' => 8080,
+		
+		// Websocket is proxied through webserver
+		'proxied' => false,
+		
+		// ZeroMQ Configuration
+		'zeromq' => array(
+			'host' => '127.0.0.1',
+			'port' => 5555
+		)
+	),
 );

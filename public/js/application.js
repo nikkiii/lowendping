@@ -3,6 +3,23 @@
 
 var totalQueries = -1;
 
+var conn = false;
+
+var onData = function(topic, data) {
+	var $respdiv = $('#server_' + data.server_id + '_response');
+	$respdiv.find('div.progress').remove();
+	$respdiv.html('<div class="response"><pre style="text-align: left;">' + data.data + '</pre></div>');
+	totalQueries--;
+	
+	if (totalQueries < 1) {
+		$('#resultcontainer').data('queryid', false);
+		$('input[type="submit"]').button('complete');
+		totalQueries = -1;
+		
+		conn.unsubscribe(data.query_id.toString());
+	}
+};
+
 var loading = '\
 <div class="progress progress-striped active">\
 	  <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>\
@@ -58,7 +75,30 @@ $(document).ready(function() {
 				
 				totalQueries = res.serverCount;
 				
-				$('#resultcontainer').status();
+				if (res.websocket && window.WebSocket) {
+					if (!conn) {
+						conn = new ab.Session(
+							res.websocket,
+							function() {
+								console.log('WebSocket connected.');
+								conn.subscribe(res.queryid.toString(), onData);
+							}, function() {
+								conn = false;
+								console.log('WebSocket closed.');
+								if (totalQueries > 0) {
+									console.log('Falling back to HTTP requests.');
+									$('#resultcontainer').status();
+								}
+							}, {
+								'skipSubprotocolCheck': true
+							}
+						);
+					} else {
+						conn.subscribe(res.queryid.toString(), onData);
+					}
+				} else {
+					$('#resultcontainer').status();
+				}
 			} else {
 				$('input[type="submit"]').button('complete');
 				alert('Error: ' + res.error);
