@@ -55,8 +55,7 @@ class Pusher implements WampServerInterface {
 		
 		if ($response) {
 			if (\Config::get('lowendping.archive.enabled', false)) {
-				$response->sent = 1;
-				$response->save();
+				$response->update(array('sent' => 1));
 			} else {
 				$response->delete();
 			}
