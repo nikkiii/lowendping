@@ -62,15 +62,18 @@ class Query:
 
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 	def handle(self):
-		data = self.request.recv(1024)
+		data = self.request.recv(2048)
 		obj = json.loads(data)
 		
-		if not obj['auth'] == lepconf.auth:
-			put(self.request, 'denied')
+		if not obj or not obj['id'] or not obj['serverid'] or not obj['query'] or not obj['type'] or not obj['auth']:
+			close(self.request, 'invalid')
+		elif not obj['auth'] == lepconf.auth:
+			close(self.request, 'denied')
 		elif not valid_query(obj['query']):
-			put(self.request, 'invalid_query')
+			close(self.request, 'invalid_query')
 		else:
 			queue.put(Query(obj['id'], obj['serverid'], obj['query'], obj['type']))
+			self.request.close()
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 	pass
@@ -116,6 +119,12 @@ def put(sock, buf):
 		for scalar in buf: put(sock, scalar)
 	else:
 		sock.send(str(buf)+"\r\n")
+
+def close(sock, buf):
+	try:
+		put(sock, buf)
+	finally:
+		sock.close()
 
 if __name__ == "__main__":
 	for i in range(lepconf.reqthreads):
