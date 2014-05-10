@@ -18,21 +18,21 @@ class HomeController extends BaseController {
 	public function showHome() {
 		return View::make('home')->with('servers', Config::get('lowendping.servers'));
 	}
-	
+
 	public function showResult(Query $query) {
 		$servers = Config::get('lowendping.servers');
 		$responses = array();
-		
+
 		foreach ($query->responses()->orderBy('server_id', 'asc')->get() as $response) {
 			$response->server = $servers[$response->server_id];
 			$responses[] = $response;
 		}
-		
+
 		$query->expire_at = $query->created_at->addDays(Config::get('lowendping.archive.days', 7));
-		
+
 		return View::make('result')->with('query', $query)->with('responses', $responses);
 	}
-	
+
 	public function submitQuery() {
 		$validator = Validator::make(Input::all(),
 			array(
@@ -41,24 +41,24 @@ class HomeController extends BaseController {
 				'type' => array('required', 'type')
 			)
 		);
-		
+
 		if ($validator->fails()) {
 			return Response::json(array('success' => false, 'error' => $validator->messages()->first()));
 		}
-		
+
 		// Validate rate limit
 		$ip = Request::getClientIp();
-		
+
 		$querylimit = Config::get('lowendping.ratelimit.queries');
-		
+
 		if (!empty($querylimit)) {
 			$limit = RateLimit::find($ip);
-			
+
 			if ($limit) {
 				$time = time();
-				
+
 				$expiration = (int) ($limit->time + Config::get('lowendping.ratelimit.timespan'));
-				
+
 				if ($expiration > $time) {
 					if ($limit->hits >= $querylimit) {
 						$reset = ($expiration - $time) / 60;
@@ -67,7 +67,7 @@ class HomeController extends BaseController {
 						}
 						return Response::json(array('success' => false, 'error' => 'Rate limit exceeded, please try again in ' . $reset . ' minutes.'));
 					}
-					
+
 					$limit->hits++;
 					$limit->save();
 				} else {
@@ -83,11 +83,11 @@ class HomeController extends BaseController {
 				$limit->save();
 			}
 		}
-		
+
 		$servers = Config::get('lowendping.servers');
-		
+
 		$serverIds = array();
-		
+
 		// Validate servers
 		foreach (Input::get('servers') as $id => $val) {
 			if (!isset($servers[$id])) {
@@ -98,31 +98,31 @@ class HomeController extends BaseController {
 
 		// Process the query
 		$query = Input::get('query');
-		
+
 		$q = new Query;
 		$q->query = $query;
 		$q->servers = serialize($serverIds);
 		$q->save();
-		
+
 		Queue::push('QueryJob', array('id' => $q->id, 'query' => $query, 'type' => Input::get('type'), 'servers' => $serverIds));
-		
+
 		$response = array(
 			'success' => true,
 			'queryid' => $q->id,
 			'serverCount' => count($serverIds)
 		);
-		
+
 		if (Config::get('lowendping.websocket.enabled', false)) {
 			$response['websocket'] = websocket_url(Config::get('lowendping.websocket.path', ''), Config::get('lowendping.websocket.proxied', false) ? false : Config::get('lowendping.websocket.port', 8080));
 		}
-		
+
 		if (Config::get('lowendping.archive.enabled', false)) {
 			$response['resultLink'] = action('HomeController@showResult', array('query' => $q->id));
 		}
-		
+
 		return Response::json($response);
 	}
-	
+
 	private function checkQueryType($query, $type = 4) {
 		if ($type == 4 && filter_var($query, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE)) {
 			return true;
@@ -131,12 +131,12 @@ class HomeController extends BaseController {
 		}
 		return false;
 	}
-	
+
 	public function checkResponses(Query $query) {
 		$out = array();
-		
+
 		$archive = Config::get('lowendping.archive.enabled', false);
-		
+
 		foreach ($query->responses()->unsent()->get() as $response) {
 			if ($archive) {
 				$response->sent = 1;
@@ -144,13 +144,13 @@ class HomeController extends BaseController {
 			} else {
 				$response->delete();
 			}
-			
+
 			$out[] = array('id' => $response->server_id, 'data' => $response->response);
 		}
-		
+
 		return Response::json($out);
 	}
-	
+
 	public function serverResponse() {
 		$validator = Validator::make(Input::all(),
 			array(
@@ -160,50 +160,44 @@ class HomeController extends BaseController {
 				'auth' => array('required')
 			)
 		);
-		
+
 		if ($validator->fails()) {
 			return Response::json(array('success' => false, 'error' => $validator->messages()->first()));
 		}
-		
+
 		$query = Query::find(Input::get('id'));
-		
+
 		$serverid = Input::get('serverid');
-		
+
 		$servers = Config::get('lowendping.servers');
-		
+
 		if (QueryResponse::where('server_id', $serverid)->where('query_id', $query->id)->count() > 0) {
 			return Response::json(array('success' => false, 'error' => 'Response already logged!'));
 		}
-		
+
 		if (!Input::has('auth') || Input::get('auth') != $servers[$serverid]['auth']) {
 			// Should we be doing this? It makes sense since it could be a valid error.
 			$this->submitResponse($query, $serverid, 'Invalid response authentication.');
 			return Response::json(array('success' => false, 'error' => 'Invalid authentication!'));
 		}
-		
-		$response = new QueryResponse;
-		$response->server_id = $serverid;
-		$response->response = Input::get('response');
-		
-		$query->responses()->save($response);
-		
+
 		$this->submitResponse($query, $serverid, Input::get('response'));
 	}
-	
+
 	private function submitResponse($query, $server_id, $res) {
 		$response = new QueryResponse;
 		$response->server_id = $server_id;
 		$response->response = $res;
 		$query->responses()->save($response);
-		
-		if (Config::get('lowendping.websocket.enabled')) {			
+
+		if (Config::get('lowendping.websocket.enabled')) {
 			// Use ZeroMQ to send the data
 			$context = new ZMQContext();
 			$socket = $context->getSocket(ZMQ::SOCKET_PUSH, 'Response Pusher');
 			$socket->connect("tcp://localhost:5555");
-			
+
 			$entryData = array('query_id' => $query->id, 'server_id' => $server_id, 'data' => $res);
-			
+
 			$socket->send(json_encode($entryData));
 		}
 	}
